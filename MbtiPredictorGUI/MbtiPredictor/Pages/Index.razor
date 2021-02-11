@@ -1,0 +1,88 @@
+@page "/"
+@using MbtiPredictor.Models
+@using RestSharp
+@using MbtiPredictor.Data
+@inject PersonalityDatabase PersonalityDatabase
+
+<RadzenTextArea @bind-Value="@UserInputText" Placeholder="Write something here" Style="height: 150px; width: 500px; margin: 20px 20px 0;"></RadzenTextArea>
+<RadzenButton Click="@ShowPrediction" Style="display: block; margin: 20px" >Predict</RadzenButton>
+
+<div class="row">
+    <div class="col-xl-6">
+        <RadzenFieldset AllowCollapse="true" Style="width:600px;margin-bottom: 20px; height:500px;">
+            <HeaderTemplate>
+                <span>
+                    <RadzenIcon Icon="account_box" /><b style="font-size:30px">People like you (@PredictedMbtiLabel)</b>
+                </span>
+            </HeaderTemplate>
+            <ChildContent>
+                <RadzenDataList PageSize="1" WrapItems="true" AllowPaging="true" 
+                                Data="@Characters" TItem="Character">
+                    <Template Context="character">
+                        <RadzenCard Style="width:300px;height:300px">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div>Name:</div>
+                                    <b>@character.Name</b>
+                                    <br />
+                                    <br />
+                                    <RadzenImage Path="@character.Photo" Style="width:100px;" />
+                                    <br />
+                                    <br />
+                                    <div>Category:</div>
+                                    <b>@character.Category</b>
+                                </div>
+                                <div class="col-md-6">
+                                    <div style="overflow-y: scroll; height:200px; margin-top:20px">@character.Description</div>
+                                </div>
+                            </div>
+                        </RadzenCard>
+                    </Template>
+                </RadzenDataList>
+            </ChildContent>
+        </RadzenFieldset>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <div class="row">
+        <div class="col-xl-12">
+            <p style="color: red">@Error</p>
+        </div>
+    </div>
+}
+
+@code {
+    private string UserInputText { get; set; }
+    private string PredictedMbtiLabel { get; set; }
+    private string Error { get; set; }
+    private IEnumerable<Character> Characters { get; set; }
+    
+    private void ShowPrediction()
+    {
+        Error = null;
+
+        var client = new RestClient(Environment.GetEnvironmentVariable("API_URL") ?? "http://localhost:12000");
+        var request = new RestRequest("predict", Method.POST, DataFormat.Json)
+            .AddJsonBody(new { text = UserInputText });
+        try
+        {
+            var response = client.Post<PredictionResponseModel>(request);
+            if (response.IsSuccessful)
+            {
+                PredictedMbtiLabel = response.Data.Prediction;
+                Characters = PersonalityDatabase.GetRandomPeople(PredictedMbtiLabel);
+            }
+            else
+            {
+                Error = response.ErrorMessage;
+            }
+        }
+        catch (Exception)
+        {
+            Console.WriteLine("Something went wrong");
+            Error = "Something went wrong";
+        }
+    }
+}
