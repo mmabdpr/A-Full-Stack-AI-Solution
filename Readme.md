@@ -5,7 +5,7 @@ Predicts your MBTI label based on the text you write. The goal of this project i
 
 - Implemented a full-fledged solution with the goal of gaining experience with deployment of AI-based applications.
 - Crawled data of fictional and non-fictional characters with their MBTI label from a website using F\#.
-- Used ONNX to save an NLTK Naive Bayes model which was trained on the crawled dataset in a standard format.
+- Trained and saved an NLTK Naive Bayes model using the crawled dataset.
 - Implemented a simple Web API using Flask to serve the saved model.
 - Designed a Web UI using ASP.NET Blazor for users to interact with the application.
 - Dockerized the project to easily run it in any environment.
